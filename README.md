@@ -9,9 +9,16 @@ libev的核心功能, event和timer两个模块, 独立出来，加一些简单�
 
 # 编译
 使用cmake
+
 $ cd core
+
 $ mkdir build
+
 $ cd build
+
 $ cmake -DCMAKE_BUILD_TYPE=Release ..
+
 会在build目录生成 libevnet_core.so
+
 通过修改cmake参数生成 libevnet_core.a
+
