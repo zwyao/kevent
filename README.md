@@ -23,3 +23,5 @@ $ cmake -DCMAKE_BUILD_TYPE=Release ..
 通过修改cmake参数生成 libevnet_core.a
 
 有问题请联系zwyyao@gmail.com
+
+后续会开发一个基于kevent的rpc框架，敬请期待
