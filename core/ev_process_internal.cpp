@@ -235,6 +235,29 @@ inline void time_update(EvLoop* loop)
         }
     }
     loop->now = rt_now;
+    /*
+    //epoll 时间精度毫秒
+    if (loop->timer_cnt &&
+            loop->timers[1].t > loop->now &&
+            loop->timers[1].t - loop->now < 0.001)
+        loop->now = loop->timers[1].t;
+    */
+}
+
+inline void adjust_timer_when_run(EvLoop* loop)
+{
+    ev_tstamp prev_now = loop->now;
+    ev_tstamp rt_now = ev_time();
+
+    int i = 1;
+    while (i <= loop->timer_cnt)
+    {
+        //fprintf(stderr, "%f -> %f\n", loop->timers[i].t, loop->timers[i].t - prev_now + rt_now);
+        loop->timers[i].t = loop->timers[i].t - prev_now + rt_now;
+        ++i;
+    }
+
+    loop->now = rt_now;
 }
 
 ev_tstamp get_timeout(EvLoop* loop)
@@ -248,8 +271,9 @@ ev_tstamp get_timeout(EvLoop* loop)
         if (waittime > to) waittime = to;
     }
 
-    if (waittime <= 0.0)
-        waittime = 0.001;
+    //fprintf(stderr, "%f\n", waittime);
+    //epoll 时间精度毫秒,最少1毫秒
+    if (waittime < 0.001) waittime = 0.001;
 
     if (unlikely(loop->pending_cnt[EV_ERROR_PRI-1] && waittime > 0.1))
         waittime = 0.1;
@@ -301,7 +325,9 @@ void* array_realloc(int elem, void* base, int* cur, int cnt)
 
 void ev_run(EvLoop* loop)
 {
-    do
+    adjust_timer_when_run(loop);
+
+    while (likely(loop->active_cnt && !loop->loop_done))
     {
         // 上半部分
         // 添加IO事件
@@ -323,7 +349,7 @@ void ev_run(EvLoop* loop)
             loop->wakeup.flag = 0;
         }
         */
-    } while (likely(loop->active_cnt && !loop->loop_done));
+    }// while (likely(loop->active_cnt && !loop->loop_done));
 }
 
 void fd_error(EvLoop* loop, int fd)
